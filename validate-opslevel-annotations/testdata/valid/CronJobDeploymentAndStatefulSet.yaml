@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    app.uw.systems/description: Reconcile services running in Kubernetes with those
+    app.uw.systems/repos.dev-enablement-mono: https://github.com/utilitywarehouse/dev-enablement-mono/services/opslevel-cleaner
+    app.uw.systems/tier: tier_4
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  annotations:
+    app.uw.systems/description: Cleans up services in OpsLevel that are defined by
+      K8s entities that no longer exist
+    app.uw.systems/repos.dev-enablement-mono: https://github.com/utilitywarehouse/dev-enablement-mono/services/opslevel-cleaner
+    app.uw.systems/tier: tier_4
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: ivr-etcd
+  annotations:
+    "app.uw.systems/description": "Handles ivr data"
+    "app.uw.systems/tier": "tier_2"
+    "app.uw.systems/repos.kubernetes-manifests": "https://github.com/utilitywarehouse/kubernetes-manifests/prod-aws/contact-channels/ivr/etcd"

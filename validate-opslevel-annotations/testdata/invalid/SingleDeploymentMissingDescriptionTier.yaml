@@ -1,0 +1,6 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bad-deployment
+  annotations:
+    app.uw.systems/repos.dev-enablement-mono: https://github.com/utilitywarehouse/dev-enablement-mono/services/opslevel-cleaner

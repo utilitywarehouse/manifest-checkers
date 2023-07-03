@@ -1,0 +1,7 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    app.uw.systems/description: Reconcile services running in Kubernetes with those
+    app.uw.systems/repos.dev-enablement-mono: https://github.com/utilitywarehouse/dev-enablement-mono/services/opslevel-cleaner
+    app.uw.systems/tier: tier_4

@@ -1,0 +1,8 @@
+# not part of the default API
+apiVersion: autoscaling.k8s.io/v1
+kind: VerticalPodAutoscaler
+metadata:
+  labels:
+    app: account-balance-reconciler-mongo-cluster
+  name: account-balance-reconciler-mongo-cluster
+  namespace: finance

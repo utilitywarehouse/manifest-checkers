@@ -1,0 +1,5 @@
+invalid Deployment: bad-deployment: Missing required annotations:
+	app.uw.systems/description
+	app.uw.systems/tier
+No annotation found with required prefixes:
+	app.uw.systems/repos

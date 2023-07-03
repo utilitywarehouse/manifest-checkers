@@ -1,0 +1,16 @@
+# not part of the default API
+apiVersion: autoscaling.k8s.io/v1
+kind: VerticalPodAutoscaler
+metadata:
+  labels:
+    app: account-balance-reconciler-mongo-cluster
+  name: account-balance-reconciler-mongo-cluster
+  namespace: finance
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    app.uw.systems/description: Reconcile services running in Kubernetes with those
+    app.uw.systems/repos.dev-enablement-mono: https://github.com/utilitywarehouse/dev-enablement-mono/services/opslevel-cleaner
+    app.uw.systems/tier: tier_4

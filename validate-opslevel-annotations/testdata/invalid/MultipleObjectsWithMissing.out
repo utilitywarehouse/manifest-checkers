@@ -1,0 +1,6 @@
+invalid CronJob: bad-cronjob: Missing required annotations:
+	app.uw.systems/description
+No annotation found with required prefixes:
+	app.uw.systems/repos
+invalid StatefulSet: bad-statefulset: Missing required annotations:
+	app.uw.systems/tier
