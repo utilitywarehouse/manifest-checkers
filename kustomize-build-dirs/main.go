@@ -172,12 +172,6 @@ func truncateSecrets(rootDir string, dirs []string) error {
 // findSecrets finds files under rootDir, that is assumed to be within a git
 // repo, that appear to be strongbox encoded secrets
 func findSecrets(rootDir string, dirs []string) ([]string, error) {
-	// I couldn't find a reasonable pathspec that lists secrets when some dirs
-	// are given, but lists nothing when no dirs, so just bail
-	if len(dirs) == 0 {
-		return []string{}, nil
-	}
-
 	// files that look to be strongbox encrypted based on their git attributes
 	// docs https://git-scm.com/docs/gitglossary#Documentation/gitglossary.txt-aiddefpathspecapathspec
 	encryptedPathspec := ":(attr:filter=strongbox diff=strongbox)"
@@ -190,7 +184,10 @@ func findSecrets(rootDir string, dirs []string) ([]string, error) {
 	var stderr strings.Builder
 	// "-z" to use null byte as field terminator, in case someone creates a
 	// file with a "\n" in the name (for some reason)
-	args := append([]string{"-C", rootDir, "ls-files", "-z", "--"}, pathspecs...)
+	// we prepend the pathspec 'not/a/path' that will match nothing to:
+	//	1) Avoid matching everything when dirs is empty
+	//	2) To work around a bug in 'ls-files': https://lore.kernel.org/git/CAEzX-aD1wfgp8AvNNfCXVM3jAaAjK+uFTqS2XP4CJbVvFr2BtQ@mail.gmail.com/
+	args := append([]string{"-C", rootDir, "ls-files", "-z", "--", "not/a/path"}, pathspecs...)
 	cmd := exec.Command("git", args...)
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr

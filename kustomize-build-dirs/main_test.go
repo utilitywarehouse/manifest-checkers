@@ -104,7 +104,7 @@ func TestFailsWhenUnableToListSecrets(t *testing.T) {
 	require.NoError(t, err)
 
 	expectedErrPrefix := fmt.Sprintf(
-		"Error listing secrets via 'git -C %s ls-files -z -- :(attr:filter=strongbox diff=strongbox).'",
+		"Error listing secrets via 'git -C %s ls-files -z -- not/a/path :(attr:filter=strongbox diff=strongbox).'",
 		workDir,
 	)
 
@@ -318,5 +318,37 @@ func TestWriteMultipleManifests(t *testing.T) {
 	}
 
 	require.NoError(t, kustomizeBuildDirs(outDir, []string{firstDeploymentPath, secondDeploymentPath}))
+	require.Equal(t, expectedContents, readOutDir(t, outDir))
+}
+
+func TestSecretsStubbed(t *testing.T) {
+	gitDir, outDir := setupTest(t)
+	manifestsDir := filepath.Join("src", "manifests")
+
+	secretContent := "t0p-s3cret"
+	deploymentContent := fmt.Sprintf(simpleDeploymentTemplate, "my-app")
+	kustomizationContent := `kind: Kustomization
+resources:
+  - deployment.yaml
+  - first-secret.yaml
+  - second-secret.yaml
+`
+	expectedContent := deploymentContent
+
+	repoFiles := map[string]string{
+		filepath.Join(manifestsDir, "deployment.yaml"):    deploymentContent,
+		filepath.Join(manifestsDir, "first-secret.yaml"):  secretContent,
+		filepath.Join(manifestsDir, "second-secret.yaml"): secretContent,
+		filepath.Join(manifestsDir, "kustomization.yaml"): kustomizationContent,
+		// nesting '.gitattributes' under a directory tests the 'git ls-files'
+		// bug mentioned in findSecrets
+		filepath.Join(manifestsDir, ".gitattributes"): "*-secret.yaml	filter=strongbox diff=strongbox\n",
+	}
+	buildGitRepo(t, gitDir, repoFiles)
+	expectedContents := map[string]string{
+		manifestsDir: expectedContent,
+	}
+
+	require.NoError(t, kustomizeBuildDirs(outDir, []string{filepath.Join(manifestsDir, "kustomization.yaml")}))
 	require.Equal(t, expectedContents, readOutDir(t, outDir))
 }
