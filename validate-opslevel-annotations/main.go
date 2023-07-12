@@ -147,6 +147,15 @@ func getMissingRequiredAnnotations(annotations map[string]string) []string {
 func getMissingRequiredPrefixAnnotations(annotations map[string]string) []string {
 	seenPrefixAnnotations := map[string]bool{"app.uw.systems/repos": false}
 
+	for _, skipTag := range []string{
+		"oss",
+		"skip-repo",
+	} {
+		if _, exists := annotations["app.uw.systems/tags."+skipTag]; exists {
+			return nil
+		}
+	}
+
 	for annotation := range annotations {
 		for prefix := range seenPrefixAnnotations {
 			if strings.HasPrefix(annotation, prefix) {

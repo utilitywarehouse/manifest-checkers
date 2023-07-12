@@ -1,0 +1,9 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: &app opslevel-k8s-reconciler
+  annotations:
+    "app.uw.systems/tags.oss": "true"
+    "app.uw.systems/description": "Reconcile services running in Kubernetes with those in Opslevel"
+    "app.uw.systems/tier": "tier_4"
