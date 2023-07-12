@@ -124,6 +124,7 @@ func findKustomizationRoots(root string, paths []string) ([]string, error) {
 			continue
 		}
 		if _, exists := rootsMap[kustomizationRoot]; !exists {
+			fmt.Printf("Find kustomization build dir: %s\n", kustomizationRoot)
 			rootsMap[kustomizationRoot] = struct{}{}
 		}
 	}
@@ -214,12 +215,14 @@ func buildManifests(kustomizationRoots []string, rootDir string) (map[string]str
 	manifestMap := make(map[string]string, len(kustomizationRoots))
 	for i := range kustomizationRoots {
 		kustomizationRoot := kustomizationRoots[i]
+		fmt.Printf("Running `kustomize build %s`\n", kustomizationRoot)
 		group.Go(func() error {
 			manifest, err := kustomizeBuild(filepath.Join(rootDir, kustomizationRoot))
 			if err != nil {
 				return err
 			}
 			mutex.Lock()
+			fmt.Printf("Built %s`\n", kustomizationRoot)
 			manifestMap[kustomizationRoot] = manifest
 			defer mutex.Unlock()
 			return nil
