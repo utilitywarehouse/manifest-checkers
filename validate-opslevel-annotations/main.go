@@ -4,28 +4,19 @@ manifests are valid.
 
 It will process an entire manifest file and report on all errors across all
 objects therein, though it will bail upon the first manifest it can't read or
-can't interpret. This is meant to run on the output of 'kustomize-build-dirs'
-and hence expects manifests filenames to be base64 encoded paths.
+can't interpret.
 
 Usage:
 
 	validate-opslevel-annotations [ manifest-file] ...
-
-Example flow:
-
-	$ mkdir built-manifests
-	$ git diff --diff-filter d --name-only main | xargs kustomize-build-dirs --out-dir manifests --
-	$ validate-opslevel-annotations build-dir/*
 */
 package main
 
 import (
-	"encoding/base64"
 	"errors"
 	"fmt"
 	"io"
 	"os"
-	"path/filepath"
 	"sort"
 	"strings"
 
@@ -46,16 +37,8 @@ func main() {
 func validateOpsLevelAnnotationsForManifests(manifestFiles []string) error {
 	var errString string
 
-	for _, path := range manifestFiles {
-		rawManifestFile, err := base64.StdEncoding.DecodeString(filepath.Base(path))
-		if err != nil {
-			return fmt.Errorf("expected a base64 encoded filename at %s, but failed to decode: %v", path, err)
-		}
-		// decoded path to the kustomize build directory, use this to
-		// communicate errors etc.
-		manifestFile := string(rawManifestFile)
-
-		file, err := os.Open(path)
+	for _, manifestFile := range manifestFiles {
+		file, err := os.Open(manifestFile)
 		if err != nil {
 			return fmt.Errorf("Failed opening manifest: %s: %v", manifestFile, err)
 		}
