@@ -2,14 +2,9 @@
 kustomize-build-dirs takes a list of filenames, and for each one walks up the
 directory tree until it finds a directory containing `kustomization.yaml` then
 runs `kustomize build` on that directory, saving the output in the directory
-given by `--out-dir`. The output file name is the relative path to the
-directory base64 encoded (to avoid invalid path characters)
+given by `--out-dir`.
 
-To avoid requiring extra broadly scoped credentials this program will empty
-any files containing secrets before running `kustomize build`. So the contents
-of any secrets will not be present in the output.
-
-It should only be run from within a Git repository.
+This program should only be run from the root of a Git repository.
 
 Usage:
 
@@ -17,13 +12,25 @@ Usage:
 
 Example:
 
-	$ mkdir manifests
-	$ git diff --diff-filter d --name-only main | xargs kustomize-build-dirs --out-dir manifests/ --
+	git diff --diff-filter d --name-only main | xargs kustomize-build-dirs --out-dir manifests/ --
+
+For each kustomize directory the directory tree from the repo root to that
+directory will be constructed in the output dir and the built manifests stored
+in 'manifests.yaml' there. For example, if there is a kustomize directory at
+'project-manifests', then running
+
+	kustomize-build-dirs --out-dir build project-manifests
+
+Will result in the built manifests being placed at
+'build/project-manifests/manifests.yaml'
+
+To avoid requiring extra broadly scoped credentials this program will empty
+any files containing secrets before running `kustomize build`. So the contents
+of any secrets will not be present in the output.
 */
 package main
 
 import (
-	"encoding/base64"
 	"errors"
 	"fmt"
 	"os"
@@ -35,6 +42,8 @@ import (
 	"github.com/urfave/cli/v2"
 	"golang.org/x/sync/errgroup"
 )
+
+const manifestFileName = "manifests.yaml"
 
 // variable used for testing
 var getwdFunc = os.Getwd
@@ -255,7 +264,11 @@ func kustomizeBuild(path string) (string, error) {
 }
 
 func writeManifest(manifest string, outDir string, manifestPath string) error {
-	target := filepath.Join(outDir, base64.StdEncoding.EncodeToString([]byte(manifestPath)))
+	targetDir := filepath.Join(outDir, manifestPath)
+	if err := os.MkdirAll(targetDir, 0o700); err != nil {
+		return fmt.Errorf("failed creating target directory '%s': %v", targetDir, err)
+	}
+	target := filepath.Join(targetDir, manifestFileName)
 
 	if err := os.WriteFile(target, []byte(manifest), 0o600); err != nil {
 		return fmt.Errorf("error writing to '%s': %v", target, err)

@@ -1,9 +1,9 @@
 package main
 
 import (
-	"encoding/base64"
 	"errors"
 	"fmt"
+	"io/fs"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -171,13 +171,17 @@ func TestFailsOnKustomizeBuildFailure(t *testing.T) {
 	requireErorrPrefix(t, err, expectedErrPrefix)
 }
 
-func TestFailsWhenUnableToWriteManifests(t *testing.T) {
+func TestFailsWhenUnableToCreateTargetDir(t *testing.T) {
 	gitDir := t.TempDir()
 	setwd(t, gitDir)
 	unwritableDir := mockoutDir
-	expectedErrPrefix := fmt.Sprintf("error writing to '%s", unwritableDir)
+	manifestDir := "manifests"
+	expectedErrPrefix := fmt.Sprintf(
+		"failed creating target directory '%s'",
+		filepath.Join(unwritableDir, manifestDir),
+	)
 
-	deploymentPath := filepath.Join("manifests", "deployment.yaml")
+	deploymentPath := filepath.Join(manifestDir, "deployment.yaml")
 	repoFiles := map[string]string{
 		filepath.Join("manifests", "kustomization.yaml"): simpleKustomization,
 		deploymentPath: simpleDeployment,
@@ -193,9 +197,27 @@ func setupTest(t *testing.T) (string, string) {
 	gitDir := t.TempDir()
 	setwd(t, gitDir)
 	outDir := filepath.Join(gitDir, "outdir")
-	require.NoError(t, os.Mkdir(outDir, 0o700))
 
 	return gitDir, outDir
+}
+
+func TestFailsWhenFailingToWriteManifest(t *testing.T) {
+	gitDir, outDir := setupTest(t)
+	manifestDir := "manifests"
+	buildDir := filepath.Join(outDir, manifestDir)
+	require.NoError(t, os.Mkdir(outDir, 0o700))
+	require.NoError(t, os.Mkdir(buildDir, 0o500))
+	expectedErrPrefix := fmt.Sprintf("error writing to '%s'", filepath.Join(buildDir, manifestFileName))
+
+	deploymentPath := filepath.Join(manifestDir, "deployment.yaml")
+	repoFiles := map[string]string{
+		filepath.Join("manifests", "kustomization.yaml"): simpleKustomization,
+		deploymentPath: simpleDeployment,
+	}
+	buildGitRepo(t, gitDir, repoFiles)
+
+	err := kustomizeBuildDirs(outDir, []string{deploymentPath})
+	requireErorrPrefix(t, err, expectedErrPrefix)
 }
 
 func TestDoesNothingWhenNothingToBuild(t *testing.T) {
@@ -210,9 +232,7 @@ func TestDoesNothingWhenNothingToBuild(t *testing.T) {
 
 	require.NoError(t, kustomizeBuildDirs(outDir, []string{"README.md"}))
 
-	outFiles, err := os.ReadDir(outDir)
-	require.NoError(t, err)
-	require.Empty(t, outFiles)
+	require.NoFileExists(t, outDir)
 	// sanity check no unexpected truncates
 	readmeContent, err := os.ReadFile(filepath.Join(gitDir, "README.md"))
 	require.NoError(t, err)
@@ -244,22 +264,31 @@ secretGenerator:
 func readOutDir(t *testing.T, outDir string) map[string]string {
 	t.Helper()
 
-	entries, err := os.ReadDir(outDir)
-	require.NoError(t, err)
-
 	outfileContents := map[string]string{}
-	for _, entry := range entries {
-		require.Falsef(t, entry.IsDir(), "unexpected directory in output directory %s", outDir)
+	walkFunc := func(path string, info fs.FileInfo, err error) error {
+		require.NoErrorf(t, err, "unexpected error on %s when walking %s", path, outDir)
+		if info.Name() == manifestFileName {
+			contents, err := os.ReadFile(path)
+			require.NoError(t, err, "unexpected error when reading %s", path)
 
-		path := filepath.Join(outDir, entry.Name())
-		contents, err := os.ReadFile(path)
-		require.NoError(t, err)
-
-		name, err := base64.StdEncoding.DecodeString(entry.Name())
-		require.NoError(t, err)
-		outfileContents[string(name)] = string(contents)
+			outfileContents[path] = string(contents)
+		}
+		return nil
 	}
+
+	require.NoError(t, filepath.Walk(outDir, walkFunc))
+
 	return outfileContents
+}
+
+func compareResults(t *testing.T, outDir string, expected map[string]string, got map[string]string) {
+	for relPath, expectedManifest := range expected {
+		expectedPath := filepath.Join(outDir, relPath, manifestFileName)
+		gotManifest, ok := got[expectedPath]
+
+		require.Truef(t, ok, "missing manifest for '%s'", relPath)
+		require.Equal(t, expectedManifest, gotManifest)
+	}
 }
 
 func TestWriteSingleManifest(t *testing.T) {
@@ -276,7 +305,7 @@ func TestWriteSingleManifest(t *testing.T) {
 	}
 
 	require.NoError(t, kustomizeBuildDirs(outDir, []string{manifestPath}))
-	require.Equal(t, expectedContents, readOutDir(t, outDir))
+	compareResults(t, outDir, expectedContents, readOutDir(t, outDir))
 }
 
 func TestWritesManifestWhenGivenNonManifestFile(t *testing.T) {
@@ -295,7 +324,7 @@ func TestWritesManifestWhenGivenNonManifestFile(t *testing.T) {
 	}
 
 	require.NoError(t, kustomizeBuildDirs(outDir, []string{nonManifestPath}))
-	require.Equal(t, expectedContents, readOutDir(t, outDir))
+	compareResults(t, outDir, expectedContents, readOutDir(t, outDir))
 }
 
 func TestWriteMultipleManifests(t *testing.T) {
@@ -318,7 +347,7 @@ func TestWriteMultipleManifests(t *testing.T) {
 	}
 
 	require.NoError(t, kustomizeBuildDirs(outDir, []string{firstDeploymentPath, secondDeploymentPath}))
-	require.Equal(t, expectedContents, readOutDir(t, outDir))
+	compareResults(t, outDir, expectedContents, readOutDir(t, outDir))
 }
 
 func TestSecretsStubbed(t *testing.T) {
@@ -350,5 +379,5 @@ resources:
 	}
 
 	require.NoError(t, kustomizeBuildDirs(outDir, []string{filepath.Join(manifestsDir, "kustomization.yaml")}))
-	require.Equal(t, expectedContents, readOutDir(t, outDir))
+	compareResults(t, outDir, expectedContents, readOutDir(t, outDir))
 }
