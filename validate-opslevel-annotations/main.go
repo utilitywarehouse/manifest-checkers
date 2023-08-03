@@ -82,6 +82,10 @@ func validateOpsLevelAnnotationsForManifests(manifestFiles []string) error {
 func validateOpsLevelAnnotations(object client.Object) error {
 	annotations := object.GetAnnotations()
 
+	if checkIfIsComponent(annotations) {
+		// skip components
+		return nil
+	}
 	missingRequiredAnnotations := getMissingRequiredAnnotations(annotations)
 	missingPrefixAnnotations := getMissingRequiredPrefixAnnotations(annotations)
 
@@ -109,6 +113,14 @@ func validateOpsLevelAnnotations(object client.Object) error {
 		return errors.New(strings.Join(errStrings, "\n"))
 	}
 	return nil
+}
+
+func checkIfIsComponent(annotations map[string]string) bool {
+	componentAnnotation := "app.uw.systems/is-component"
+	if isComponentStr, ok := annotations[componentAnnotation]; ok {
+		return isComponentStr == "true"
+	}
+	return false
 }
 
 func getMissingRequiredAnnotations(annotations map[string]string) []string {
@@ -159,7 +171,7 @@ func getMissingRequiredPrefixAnnotations(annotations map[string]string) []string
 	return missingAnnotations
 }
 
-// decodeManifests decodes a manifestfile containing manifests for 1 or more
+// decodeManifests decodes a manifest file containing manifests for 1 or more
 // k8s objects
 func decodeManifest(rc io.ReadCloser) ([]client.Object, error) {
 	yamlDecoder := yaml.NewDocumentDecoder(rc)
