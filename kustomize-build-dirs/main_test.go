@@ -84,7 +84,7 @@ func TestFailsWhenUnableToReadWorkingDirectory(t *testing.T) {
 	defer func() { getwdFunc = orig }()
 	getwdFunc = getwd
 
-	err := kustomizeBuildDirs(mockoutDir, []string{})
+	err := kustomizeBuildDirs(mockoutDir, false, []string{})
 
 	require.EqualError(t, err, expectedError)
 }
@@ -92,7 +92,7 @@ func TestFailsWhenUnableToReadWorkingDirectory(t *testing.T) {
 func TestFailsWhenUnableToFindKustomize(t *testing.T) {
 	expectedError := "requires `kustomize` to be installed https://kubectl.docs.kubernetes.io/installation/kustomize/"
 	t.Setenv("PATH", "")
-	err := kustomizeBuildDirs(mockoutDir, []string{})
+	err := kustomizeBuildDirs(mockoutDir, false, []string{})
 
 	require.EqualError(t, err, expectedError)
 }
@@ -109,7 +109,7 @@ func TestFailsWhenUnableToListSecrets(t *testing.T) {
 	)
 
 	// run command outside of any Git directory
-	err = kustomizeBuildDirs(mockoutDir, []string{"kustomization.yaml"})
+	err = kustomizeBuildDirs(mockoutDir, true, []string{"kustomization.yaml"})
 	requireErorrPrefix(t, err, expectedErrPrefix)
 }
 
@@ -128,7 +128,7 @@ func TestFailsWhenUnableToTruncateSecret(t *testing.T) {
 	// make secret file read-only
 	require.NoError(t, os.Chmod(filepath.Join(gitDir, secretFile), 0o400))
 
-	err := kustomizeBuildDirs(mockoutDir, []string{"kustomization.yaml"})
+	err := kustomizeBuildDirs(mockoutDir, true, []string{"kustomization.yaml"})
 
 	requireErorrPrefix(t, err, expectedErrPrefix)
 }
@@ -147,7 +147,7 @@ func TestFailsWhenUnableToFindKustomizations(t *testing.T) {
 	defer os.Chmod(unredableDirPath, 0o700) //nolint:errcheck
 	expectedErrPrefix := "Error checking for file in manifests:"
 
-	err := kustomizeBuildDirs(mockoutDir, []string{"manifests/kustomization.yaml"})
+	err := kustomizeBuildDirs(mockoutDir, false, []string{"manifests/kustomization.yaml"})
 	requireErorrPrefix(t, err, expectedErrPrefix)
 }
 
@@ -166,7 +166,7 @@ func TestFailsOnKustomizeBuildFailure(t *testing.T) {
 		filepath.Join(gitDir, kustomizeDir),
 	)
 
-	err := kustomizeBuildDirs(mockoutDir, []string{kustomizationPath})
+	err := kustomizeBuildDirs(mockoutDir, false, []string{kustomizationPath})
 
 	requireErorrPrefix(t, err, expectedErrPrefix)
 }
@@ -188,7 +188,7 @@ func TestFailsWhenUnableToCreateTargetDir(t *testing.T) {
 	}
 	buildGitRepo(t, gitDir, repoFiles)
 
-	err := kustomizeBuildDirs(unwritableDir, []string{deploymentPath})
+	err := kustomizeBuildDirs(unwritableDir, false, []string{deploymentPath})
 	requireErorrPrefix(t, err, expectedErrPrefix)
 }
 
@@ -216,7 +216,7 @@ func TestFailsWhenFailingToWriteManifest(t *testing.T) {
 	}
 	buildGitRepo(t, gitDir, repoFiles)
 
-	err := kustomizeBuildDirs(outDir, []string{deploymentPath})
+	err := kustomizeBuildDirs(outDir, false, []string{deploymentPath})
 	requireErorrPrefix(t, err, expectedErrPrefix)
 }
 
@@ -230,7 +230,7 @@ func TestDoesNothingWhenNothingToBuild(t *testing.T) {
 	}
 	buildGitRepo(t, gitDir, repoFiles)
 
-	require.NoError(t, kustomizeBuildDirs(outDir, []string{"README.md"}))
+	require.NoError(t, kustomizeBuildDirs(outDir, true, []string{"README.md"}))
 
 	require.NoFileExists(t, outDir)
 	// sanity check no unexpected truncates
@@ -258,7 +258,7 @@ secretGenerator:
 	}
 
 	buildGitRepo(t, gitDir, repoFiles)
-	require.NoError(t, kustomizeBuildDirs(outDir, []string{"kustomization.yaml"}))
+	require.NoError(t, kustomizeBuildDirs(outDir, true, []string{"kustomization.yaml"}))
 }
 
 func readOutDir(t *testing.T, outDir string) map[string]string {
@@ -304,7 +304,7 @@ func TestWriteSingleManifest(t *testing.T) {
 		"manifests": simpleDeployment,
 	}
 
-	require.NoError(t, kustomizeBuildDirs(outDir, []string{manifestPath}))
+	require.NoError(t, kustomizeBuildDirs(outDir, false, []string{manifestPath}))
 	compareResults(t, outDir, expectedContents, readOutDir(t, outDir))
 }
 
@@ -323,7 +323,7 @@ func TestWritesManifestWhenGivenNonManifestFile(t *testing.T) {
 		"manifests": simpleDeployment,
 	}
 
-	require.NoError(t, kustomizeBuildDirs(outDir, []string{nonManifestPath}))
+	require.NoError(t, kustomizeBuildDirs(outDir, false, []string{nonManifestPath}))
 	compareResults(t, outDir, expectedContents, readOutDir(t, outDir))
 }
 
@@ -346,7 +346,7 @@ func TestWriteMultipleManifests(t *testing.T) {
 		"second-project": secondDeploymentcontent,
 	}
 
-	require.NoError(t, kustomizeBuildDirs(outDir, []string{firstDeploymentPath, secondDeploymentPath}))
+	require.NoError(t, kustomizeBuildDirs(outDir, false, []string{firstDeploymentPath, secondDeploymentPath}))
 	compareResults(t, outDir, expectedContents, readOutDir(t, outDir))
 }
 
@@ -378,6 +378,6 @@ resources:
 		manifestsDir: expectedContent,
 	}
 
-	require.NoError(t, kustomizeBuildDirs(outDir, []string{filepath.Join(manifestsDir, "kustomization.yaml")}))
+	require.NoError(t, kustomizeBuildDirs(outDir, true, []string{filepath.Join(manifestsDir, "kustomization.yaml")}))
 	compareResults(t, outDir, expectedContents, readOutDir(t, outDir))
 }

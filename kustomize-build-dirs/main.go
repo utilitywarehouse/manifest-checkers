@@ -50,7 +50,8 @@ var getwdFunc = os.Getwd
 
 func main() {
 	var opts struct {
-		outDir string
+		outDir            string
+		doTruncateSecrets bool
 	}
 	app := &cli.App{
 		Name:  "kustomize-build-dirs",
@@ -62,9 +63,15 @@ func main() {
 				Usage:       "Directory to output build manifests",
 				Destination: &opts.outDir,
 			},
+			&cli.BoolFlag{
+				Name:        "truncate-secrets",
+				Value:       false,
+				Usage:       "Whether or not to truncate secrets. This can make life easier when you don't have strongbox credentials for some secrets",
+				Destination: &opts.doTruncateSecrets,
+			},
 		},
 		Action: func(c *cli.Context) error {
-			return kustomizeBuildDirs(opts.outDir, c.Args().Slice())
+			return kustomizeBuildDirs(opts.outDir, opts.doTruncateSecrets, c.Args().Slice())
 		},
 	}
 
@@ -74,7 +81,7 @@ func main() {
 	}
 }
 
-func kustomizeBuildDirs(outDir string, filepaths []string) error {
+func kustomizeBuildDirs(outDir string, doTruncateSecrets bool, filepaths []string) error {
 	rootDir, err := getwdFunc()
 	if err != nil {
 		return fmt.Errorf("error reading working directory: %v", err)
@@ -90,8 +97,10 @@ func kustomizeBuildDirs(outDir string, filepaths []string) error {
 	}
 
 	// truncate secrets so we can run `kustomize build` without having to decrypt them
-	if err := truncateSecrets(rootDir, kustomizationRoots); err != nil {
-		return err
+	if doTruncateSecrets {
+		if err := truncateSecrets(rootDir, kustomizationRoots); err != nil {
+			return err
+		}
 	}
 
 	manifestMap, err := buildManifests(kustomizationRoots, rootDir)
