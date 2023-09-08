@@ -1,5 +1,15 @@
 # Changelog
 
+## 335602d8b01f243b743e9fad573ae506f0582373 - 2023-09-08
+
+### Added
+
+  - Add `--truncate-secrets` flag
+
+### Changed
+
+  - **Breaking** Secrets are no longer truncated by default
+
 ## bb665fd4af034493a5119954081fc039d7ae68c1 - 2023-07-21
 
 ### Changed
