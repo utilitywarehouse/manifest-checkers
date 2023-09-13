@@ -235,12 +235,20 @@ func buildManifests(kustomizationRoots []string, rootDir string) (map[string]str
 		kustomizationRoot := kustomizationRoots[i]
 		fmt.Printf("Running `kustomize build %s`\n", kustomizationRoot)
 		group.Go(func() error {
-			manifest, err := kustomizeBuild(filepath.Join(rootDir, kustomizationRoot))
+			manifest, stderr, err := kustomizeBuild(filepath.Join(rootDir, kustomizationRoot))
 			if err != nil {
 				return err
 			}
 			mutex.Lock()
 			fmt.Printf("Built: %s\n", kustomizationRoot)
+			if stderr != "" {
+				fmt.Fprintf(
+					os.Stderr,
+					"---start Warnings---\nWarnings for: %s\n%s---End warnings---\n",
+					kustomizationRoot,
+					stderr,
+				)
+			}
 			manifestMap[kustomizationRoot] = manifest
 			defer mutex.Unlock()
 			return nil
@@ -252,7 +260,7 @@ func buildManifests(kustomizationRoots []string, rootDir string) (map[string]str
 	return manifestMap, nil
 }
 
-func kustomizeBuild(path string) (string, error) {
+func kustomizeBuild(path string) (string, string, error) {
 	var stdout strings.Builder
 	var stderr strings.Builder
 	args := []string{"build", path}
@@ -261,7 +269,7 @@ func kustomizeBuild(path string) (string, error) {
 	cmd.Stderr = &stderr
 
 	if err := cmd.Run(); err != nil {
-		return "", fmt.Errorf(
+		return "", "", fmt.Errorf(
 			"Error running 'kustomize %s': %v\nstderr: %s",
 			strings.Join(args, " "),
 			err,
@@ -269,7 +277,7 @@ func kustomizeBuild(path string) (string, error) {
 		)
 	}
 
-	return stdout.String(), nil
+	return stdout.String(), stderr.String(), nil
 }
 
 func writeManifest(manifest string, outDir string, manifestPath string) error {
