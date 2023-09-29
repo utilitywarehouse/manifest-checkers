@@ -67,7 +67,14 @@ func TestFailsOnInvalidManifests(t *testing.T) {
 				expectedOut, err := os.ReadFile(filepath.Join(invalidManifestsDir, expectedOutFile))
 				require.NoErrorf(t, err, "Can't find output file for %s", entry.Name())
 				// .out files contain trailing newlines, but the error will not
-				expectedErr := strings.TrimSuffix(fmt.Sprintf("failed validating manifests from %s: %s", manifest, string(expectedOut)), "\n")
+				expectedErr := strings.TrimSuffix(
+					fmt.Sprintf(
+						"failed validating manifests from %s: %s",
+						manifest,
+						string(expectedOut),
+					),
+					"\n",
+				)
 
 				gotErr := validateOpsLevelAnnotationsForManifests([]string{manifest})
 				require.Error(t, gotErr)

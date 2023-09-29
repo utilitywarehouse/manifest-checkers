@@ -207,7 +207,10 @@ func TestFailsWhenFailingToWriteManifest(t *testing.T) {
 	buildDir := filepath.Join(outDir, manifestDir)
 	require.NoError(t, os.Mkdir(outDir, 0o700))
 	require.NoError(t, os.Mkdir(buildDir, 0o500))
-	expectedErrPrefix := fmt.Sprintf("error writing to '%s'", filepath.Join(buildDir, manifestFileName))
+	expectedErrPrefix := fmt.Sprintf(
+		"error writing to '%s'",
+		filepath.Join(buildDir, manifestFileName),
+	)
 
 	deploymentPath := filepath.Join(manifestDir, "deployment.yaml")
 	repoFiles := map[string]string{
@@ -252,8 +255,11 @@ secretGenerator:
 `
 
 	repoFiles := map[string]string{
-		"secrets.yaml":       "encryptedNonsensehere\xff\xff\n",
-		".gitattributes":     fmt.Sprintf("%s	filter=strongbox diff=strongbox\n", "secrets.yaml"),
+		"secrets.yaml": "encryptedNonsensehere\xff\xff\n",
+		".gitattributes": fmt.Sprintf(
+			"%s	filter=strongbox diff=strongbox\n",
+			"secrets.yaml",
+		),
 		"kustomization.yaml": kustomizationContent,
 	}
 
@@ -281,7 +287,12 @@ func readOutDir(t *testing.T, outDir string) map[string]string {
 	return outfileContents
 }
 
-func compareResults(t *testing.T, outDir string, expected map[string]string, got map[string]string) {
+func compareResults(
+	t *testing.T,
+	outDir string,
+	expected map[string]string,
+	got map[string]string,
+) {
 	for relPath, expectedManifest := range expected {
 		expectedPath := filepath.Join(outDir, relPath, manifestFileName)
 		gotManifest, ok := got[expectedPath]
@@ -346,7 +357,10 @@ func TestWriteMultipleManifests(t *testing.T) {
 		"second-project": secondDeploymentcontent,
 	}
 
-	require.NoError(t, kustomizeBuildDirs(outDir, false, []string{firstDeploymentPath, secondDeploymentPath}))
+	require.NoError(
+		t,
+		kustomizeBuildDirs(outDir, false, []string{firstDeploymentPath, secondDeploymentPath}),
+	)
 	compareResults(t, outDir, expectedContents, readOutDir(t, outDir))
 }
 
@@ -378,6 +392,13 @@ resources:
 		manifestsDir: expectedContent,
 	}
 
-	require.NoError(t, kustomizeBuildDirs(outDir, true, []string{filepath.Join(manifestsDir, "kustomization.yaml")}))
+	require.NoError(
+		t,
+		kustomizeBuildDirs(
+			outDir,
+			true,
+			[]string{filepath.Join(manifestsDir, "kustomization.yaml")},
+		),
+	)
 	compareResults(t, outDir, expectedContents, readOutDir(t, outDir))
 }
