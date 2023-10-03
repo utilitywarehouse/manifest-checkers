@@ -27,7 +27,9 @@ Will result in the built manifests being placed at
 To avoid requiring extra broadly scoped credentials this program will empty
 any files containing secrets before running `kustomize build`. So the contents
 of any secrets will not be present in the output.
-*/package main
+*/
+
+package main
 
 import (
 	"errors"
