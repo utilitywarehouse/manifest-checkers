@@ -62,6 +62,9 @@ func runGitCmd(t *testing.T, gitDir string, args []string) {
 	var stderr strings.Builder
 	args = append([]string{"-C", gitDir}, args...)
 	cmd := exec.Command("git", args...)
+	// avoid loading any user/system specific configuration
+	cmd.Env = append(os.Environ(), "GIT_CONFIG_GLOBAL=/dev/null")
+
 	cmd.Stderr = &stderr
 
 	require.NoError(
