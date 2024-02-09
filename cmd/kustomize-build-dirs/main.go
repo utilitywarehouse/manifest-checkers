@@ -1,34 +1,3 @@
-/*
-kustomize-build-dirs takes a list of filenames, and for each one walks up the
-directory tree until it finds a directory containing `kustomization.yaml` then
-runs `kustomize build` on that directory, saving the output in the directory
-given by `--out-dir`.
-
-This program should only be run from the root of a Git repository.
-
-Usage:
-
-	kustomize-build-dirs --out-dir <dir> <filenames ... >
-
-Example:
-
-	git diff --diff-filter d --name-only main | xargs kustomize-build-dirs --out-dir manifests/ --
-
-For each kustomize directory the directory tree from the repo root to that
-directory will be constructed in the output dir and the built manifests stored
-in 'manifests.yaml' there. For example, if there is a kustomize directory at
-'project-manifests', then running
-
-	kustomize-build-dirs --out-dir build project-manifests
-
-Will result in the built manifests being placed at
-'build/project-manifests/manifests.yaml'
-
-To avoid requiring extra broadly scoped credentials this program will empty
-any files containing secrets before running `kustomize build`. So the contents
-of any secrets will not be present in the output.
-*/
-
 package main
 
 import (

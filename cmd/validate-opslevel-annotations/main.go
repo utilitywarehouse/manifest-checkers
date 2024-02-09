@@ -1,15 +1,3 @@
-/*
-validate-opslevel-annotations checks the OpsLevel annotations for a list of
-manifests are valid.
-
-It will process an entire manifest file and report on all errors across all
-objects therein, though it will bail upon the first manifest it can't read or
-can't interpret.
-
-Usage:
-
-	validate-opslevel-annotations [ manifest-file] ...
-*/
 package main
 
 import (
