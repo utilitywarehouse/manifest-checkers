@@ -27,7 +27,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func main() {
+func main() { //go-cov:skip
 	if err := validateOpsLevelAnnotationsForManifests(os.Args[1:]); err != nil {
 		fmt.Fprintf(os.Stderr, "failed: %v\n", err)
 		os.Exit(1)

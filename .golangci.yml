@@ -1,0 +1,68 @@
+# options for analysis running
+run:
+  timeout: 10m
+  tests: true
+
+# output configuration options
+output:
+  format: colored-line-number
+  print-issued-lines: true
+  print-linter-name: true
+
+# all available settings of specific linters
+linters-settings:
+  gci:
+    sections:
+      - standard
+      - default
+      - prefix(github.com/utilitywarehouse/release-tools)
+  errcheck:
+    check-type-assertions: true
+    check-blank: true
+  govet:
+    check-shadowing: false
+    disable:
+      - shadow
+  goconst:
+    min-len: 3
+    min-occurrences: 3
+    ignore-tests: true
+  misspell:
+    locale: UK
+  unused:
+    check-exported: false
+  unparam:
+    algo: cha
+  nakedret:
+    max-func-lines: 30
+  prealloc:
+    simple: true
+    range-loops: true
+    for-loops: true
+  revive:
+    rules:
+      - name: exported
+        disabled: true
+      - name: context-as-argument
+        disabled: false
+  nolintlint:
+    require-specific: true
+
+linters:
+  enable:
+    - revive # Revive replaces golint
+    - misspell # Finds commonly misspelled English words in comments [fast: true]
+    - nakedret # Finds naked returns in functions greater than a specified function length [fast: true]
+    - errcheck # Errcheck is a program for checking for unchecked errors in go programs. These unchecked errors can be critical bugs in some cases [fast: false]
+    - gas # Inspects source code for security problems [fast: false]
+    - unconvert # Remove unnecessary type conversions [fast: false]
+    - unparam # Reports unused function parameters [fast: false]
+    - prealloc # Finds slice declarations that could potentially be preallocated [fast: true]
+    - goimports # Goimports does everything that gofmt does. Additionally it checks unused imports [fast: true]
+    - gci
+    - gofumpt
+    - nolintlint
+    - goconst
+
+  disable:
+    - gosimple # Linter for Go source code that specializes in simplifying a code [fast: false]

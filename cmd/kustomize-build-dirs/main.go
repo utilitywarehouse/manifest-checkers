@@ -49,7 +49,7 @@ const manifestFileName = "manifests.yaml"
 // variable used for testing
 var getwdFunc = os.Getwd
 
-func main() {
+func main() { //go-cov:skip
 	var opts struct {
 		outDir            string
 		doTruncateSecrets bool
@@ -242,7 +242,7 @@ func buildManifests(kustomizationRoots []string, rootDir string) (map[string]str
 			}
 			mutex.Lock()
 			fmt.Printf("Built: %s\n", kustomizationRoot)
-			if stderr != "" {
+			if stderr != "" { //go-cov:skip // version specific warnings might be a pain to test
 				fmt.Fprintf(
 					os.Stderr,
 					"---start Warnings---\nWarnings for: %s\n%s---End warnings---\n",

@@ -1,0 +1,30 @@
+name: Checks
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - uses: utilitywarehouse/go-actions/setup-go@v0.5.0
+        with:
+          go-version-file: 'go.mod'
+      - name: test
+        run: make report-coverage
+      - name: check-coverage
+        run: make check-coverage
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-python@v3
+    - uses: utilitywarehouse/go-actions/setup-go@v0.5.0
+      with:
+        go-version-file: 'go.mod'
+    - uses: pre-commit/action@v3.0.0
