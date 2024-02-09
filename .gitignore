@@ -1,2 +1,5 @@
 /coverage.out
 /go-cov.out
+
+# goreleaser build outputs
+dist/
