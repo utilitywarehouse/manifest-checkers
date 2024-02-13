@@ -3,6 +3,9 @@
 A collection of applications used to help build and check Kubernetes manifests
 at Utility Warehouse.
 
+This application is developed in the open, but note that it is developed
+specifically for our needs.
+
 ## `kustomize-build-dirs`
 
 kustomize-build-dirs takes a list of filenames, and for each one walks up the
