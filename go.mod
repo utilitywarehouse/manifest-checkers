@@ -8,7 +8,7 @@ require (
 	github.com/urfave/cli/v2 v2.27.1
 	gitlab.com/matthewhughes/go-cov v0.2.0
 	golang.org/x/sync v0.6.0
-	k8s.io/apimachinery v0.29.1
+	k8s.io/apimachinery v0.29.2
 	k8s.io/client-go v0.29.1
 	sigs.k8s.io/controller-runtime v0.17.1
 )
