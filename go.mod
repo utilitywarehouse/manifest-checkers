@@ -8,7 +8,7 @@ require (
 	github.com/urfave/cli/v2 v2.27.1
 	gitlab.com/matthewhughes/go-cov v0.2.0
 	golang.org/x/sync v0.6.0
-	k8s.io/apimachinery v0.29.2
+	k8s.io/apimachinery v0.29.3
 	k8s.io/client-go v0.29.2
 	sigs.k8s.io/controller-runtime v0.17.2
 )
@@ -77,7 +77,7 @@ require (
 	github.com/gobwas/glob v0.2.3 // indirect
 	github.com/gofrs/flock v0.8.1 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
-	github.com/golang/protobuf v1.5.3 // indirect
+	github.com/golang/protobuf v1.5.4 // indirect
 	github.com/golangci/check v0.0.0-20180506172741-cfe4005ccda2 // indirect
 	github.com/golangci/dupl v0.0.0-20180902072040-3e9179ac440a // indirect
 	github.com/golangci/go-misc v0.0.0-20220329215616-d24fe342adfe // indirect
