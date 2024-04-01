@@ -6,7 +6,7 @@ require (
 	github.com/golangci/golangci-lint v1.57.1
 	github.com/stretchr/testify v1.9.0
 	github.com/urfave/cli/v2 v2.27.1
-	gitlab.com/matthewhughes/go-cov v0.2.0
+	gitlab.com/matthewhughes/go-cov v0.3.0
 	golang.org/x/sync v0.6.0
 	k8s.io/apimachinery v0.29.3
 	k8s.io/client-go v0.29.3
