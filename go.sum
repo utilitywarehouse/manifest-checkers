@@ -601,8 +601,8 @@ github.com/yuin/goldmark v1.4.1/go.mod h1:mwnBkeHKe2W/ZEtQ+71ViKU8L12m81fl3OWwC1
 github.com/yuin/goldmark v1.4.13/go.mod h1:6yULJ656Px+3vBD8DxQVa3kxgyrAnzto9xy5taEt/CY=
 gitlab.com/bosi/decorder v0.4.1 h1:VdsdfxhstabyhZovHafFw+9eJ6eU0d2CkFNJcZz/NU4=
 gitlab.com/bosi/decorder v0.4.1/go.mod h1:jecSqWUew6Yle1pCr2eLWTensJMmsxHsBwt+PVbkAqA=
-gitlab.com/matthewhughes/go-cov v0.2.0 h1:ILZQq9i55Ge9JoQXihmUJ0SXrRlZ74+mngg7KlVmQBs=
-gitlab.com/matthewhughes/go-cov v0.2.0/go.mod h1:rJIFa8yNn5d+G4uDlnoMsclB0GQkHszXWwZBddUaP1I=
+gitlab.com/matthewhughes/go-cov v0.3.0 h1:IodOLr/t0pqV28533EzCij5Wp1dJjTAdELdlvpqZlmc=
+gitlab.com/matthewhughes/go-cov v0.3.0/go.mod h1:CoPZAO6pS3/J7wRLHQSVQKxKo8vozyhHk2aFtvDyKNs=
 go-simpler.org/assert v0.7.0 h1:OzWWZqfNxt8cLS+MlUp6Tgk1HjPkmgdKBq9qvy8lZsA=
 go-simpler.org/assert v0.7.0/go.mod h1:74Eqh5eI6vCK6Y5l3PI8ZYFXG4Sa+tkr70OIPJAUr28=
 go-simpler.org/musttag v0.9.0 h1:Dzt6/tyP9ONr5g9h9P3cnYWCxeBFRkd0uJL/w+1Mxos=
