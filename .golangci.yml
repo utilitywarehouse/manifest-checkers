@@ -1,26 +1,16 @@
-# options for analysis running
 run:
-  timeout: 10m
   tests: true
 
-# output configuration options
-output:
-  format: colored-line-number
-  print-issued-lines: true
-  print-linter-name: true
-
-# all available settings of specific linters
 linters-settings:
   gci:
     sections:
       - standard
       - default
-      - prefix(github.com/utilitywarehouse/release-tools)
+      - prefix(github.com/utilitywarehouse/manifest-checkers)
   errcheck:
     check-type-assertions: true
     check-blank: true
   govet:
-    check-shadowing: false
     disable:
       - shadow
   goconst:
@@ -29,10 +19,6 @@ linters-settings:
     ignore-tests: true
   misspell:
     locale: UK
-  unused:
-    check-exported: false
-  unparam:
-    algo: cha
   nakedret:
     max-func-lines: 30
   prealloc:
