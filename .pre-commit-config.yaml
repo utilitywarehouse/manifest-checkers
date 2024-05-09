@@ -1,8 +1,9 @@
 repos:
   - repo: https://github.com/golangci/golangci-lint
-    rev: v1.57.2
+    rev: v1.58.1
     hooks:
       - id: golangci-lint-full
+      - id: golangci-lint-config-verify
   - repo: https://github.com/matthewhughes934/golines
     rev: v0.12.0
     hooks:
