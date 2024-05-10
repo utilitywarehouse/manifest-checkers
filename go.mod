@@ -6,7 +6,7 @@ require (
 	github.com/golangci/golangci-lint v1.58.1
 	github.com/stretchr/testify v1.9.0
 	github.com/urfave/cli/v2 v2.27.2
-	gitlab.com/matthewhughes/go-cov v0.3.0
+	gitlab.com/matthewhughes/go-cov v0.4.0
 	golang.org/x/sync v0.7.0
 	k8s.io/apimachinery v0.30.0
 	k8s.io/client-go v0.30.0
@@ -193,6 +193,7 @@ require (
 	github.com/yeya24/promlinter v0.3.0 // indirect
 	github.com/ykadowak/zerologlint v0.1.5 // indirect
 	gitlab.com/bosi/decorder v0.4.2 // indirect
+	gitlab.com/matthewhughes/signalctx v0.1.0 // indirect
 	go-simpler.org/musttag v0.12.1 // indirect
 	go-simpler.org/sloglint v0.6.0 // indirect
 	go.uber.org/automaxprocs v1.5.3 // indirect
