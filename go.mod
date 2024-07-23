@@ -8,6 +8,7 @@ require (
 	github.com/urfave/cli/v2 v2.27.2
 	gitlab.com/matthewhughes/go-cov v0.4.0
 	golang.org/x/sync v0.7.0
+	gopkg.in/yaml.v2 v2.4.0
 	k8s.io/apimachinery v0.30.2
 	k8s.io/client-go v0.30.2
 	sigs.k8s.io/controller-runtime v0.18.4
@@ -213,7 +214,6 @@ require (
 	google.golang.org/protobuf v1.33.0 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
-	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	honnef.co/go/tools v0.4.7 // indirect
 	k8s.io/api v0.30.2 // indirect

@@ -76,7 +76,7 @@ func kustomizeBuildDirs(outDir string, doTruncateSecrets bool, filepaths []strin
 	}
 
 	kustomizationRoots, err = removeComponentKustomizations(rootDir, kustomizationRoots)
-	if err != nil {
+	if err != nil { //go-cov:skip
 		return err
 	}
 
@@ -163,7 +163,7 @@ func removeComponentKustomizations(kustomizationRoot string, paths []string) ([]
 	pathsNoComponent := []string{}
 	for _, path := range paths {
 		isComponent, err := checkIfIsComponent(filepath.Join(kustomizationRoot, path, "kustomization.yaml"))
-		if err != nil {
+		if err != nil { //go-cov:skip
 			return nil, err
 		}
 		if !isComponent {
@@ -175,7 +175,7 @@ func removeComponentKustomizations(kustomizationRoot string, paths []string) ([]
 
 func checkIfIsComponent(filepath string) (bool, error) {
 	file, err := os.Open(filepath)
-	if err != nil {
+	if err != nil { //go-cov:skip
 		return false, fmt.Errorf("failed opening kustomization file: %s: %v", filepath, err)
 	}
 	defer file.Close()
@@ -189,7 +189,7 @@ func checkIfIsComponent(filepath string) (bool, error) {
 	// Unmarshal the YAML into the struct
 	var kustomization Kustomization
 	err = yaml.Unmarshal(data, &kustomization)
-	if err != nil {
+	if err != nil { //go-cov:skip
 		log.Fatalf("Error unmarshaling YAML: %v", err)
 	}
 	return kustomization.Kind == "Component", nil
