@@ -12,6 +12,8 @@ kustomize-build-dirs takes a list of filenames, and for each one walks up the
 directory tree until it finds a directory containing `kustomization.yaml` then
 runs `kustomize build` on that directory, saving the output in the directory
 given by `--out-dir`.
+It also truncates secrets, so that we don't need to decrypt them in order to check
+if manifests are correct.
 
 This program should only be run from the root of a Git repository.
 
