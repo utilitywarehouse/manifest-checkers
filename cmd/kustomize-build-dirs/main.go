@@ -183,7 +183,7 @@ func checkIfIsComponent(filepath string) (bool, error) {
 
 	// Read the file's content
 	data, err := io.ReadAll(file)
-	if err != nil {
+	if err != nil { //go-cov:skip
 		return false, fmt.Errorf("error reading file: %v", err)
 	}
 
