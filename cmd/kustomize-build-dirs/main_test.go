@@ -388,6 +388,31 @@ func TestWriteMultipleManifests(t *testing.T) {
 	compareResults(t, outDir, expectedContents, readOutDir(t, outDir))
 }
 
+func TestWriteMultipleManifestsOneIscomponent(t *testing.T) {
+	gitDir, outDir := setupTest(t)
+
+	firstDeploymentPath := filepath.Join("first-project", "deployment.yaml")
+	firstDeploymentcontent := fmt.Sprintf(simpleDeploymentTemplate, "first-app")
+	secondDeploymentPath := filepath.Join("second-project", "deployment.yaml")
+	secondDeploymentcontent := fmt.Sprintf(simpleDeploymentTemplate, "second-app")
+	repoFiles := map[string]string{
+		firstDeploymentPath: firstDeploymentcontent,
+		filepath.Join("first-project", "kustomization.yaml"): simpleKustomization,
+		secondDeploymentPath: secondDeploymentcontent,
+		filepath.Join("second-project", "kustomization.yaml"): componentKustomization,
+	}
+	buildGitRepo(t, gitDir, repoFiles)
+	expectedContents := map[string]string{
+		"first-project": firstDeploymentcontent,
+	}
+
+	require.NoError(
+		t,
+		kustomizeBuildDirs(outDir, false, []string{firstDeploymentPath, secondDeploymentPath}),
+	)
+	compareResults(t, outDir, expectedContents, readOutDir(t, outDir))
+}
+
 func TestSecretsStubbed(t *testing.T) {
 	gitDir, outDir := setupTest(t)
 	manifestsDir := filepath.Join("src", "manifests")
