@@ -22,6 +22,13 @@ kind: Kustomization
 resources:
   - deployment.yaml
 `
+
+	componentKustomization = `apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Component 
+
+patches:
+  - path: deployment.yaml
+`
 	simpleDeploymentTemplate = `apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -44,7 +51,7 @@ func requireErorrPrefix(t *testing.T, err error, prefix string) {
 	t.Helper()
 
 	require.Error(t, err)
-	require.LessOrEqual(t, len(prefix), len(err.Error()), "error cannot be shorter than prefix")
+	require.LessOrEqual(t, len(prefix), len(err.Error()), fmt.Sprintf("error cannot be shorter than prefix, err: %s, prefix: %s", err, prefix))
 	require.Equalf(t, prefix, err.Error()[:len(prefix)], "full error: %v", err)
 }
 
@@ -111,7 +118,7 @@ func TestFailsWhenUnableToListSecrets(t *testing.T) {
 		workDir,
 	)
 
-	// run command outside of any Git directory
+	// run command outside any Git directory
 	err = kustomizeBuildDirs(mockoutDir, true, []string{"kustomization.yaml"})
 	requireErorrPrefix(t, err, expectedErrPrefix)
 }
@@ -148,7 +155,7 @@ func TestFailsWhenUnableToFindKustomizations(t *testing.T) {
 	require.NoError(t, os.Chmod(unredableDirPath, 0o600))
 	// restore permissions so we can cleanup
 	defer os.Chmod(unredableDirPath, 0o700) //nolint:errcheck
-	expectedErrPrefix := "Error checking for file in manifests:"
+	expectedErrPrefix := "error checking for file in manifests:"
 
 	err := kustomizeBuildDirs(mockoutDir, false, []string{"manifests/kustomization.yaml"})
 	requireErorrPrefix(t, err, expectedErrPrefix)
@@ -303,6 +310,20 @@ func compareResults(
 		require.Truef(t, ok, "missing manifest for '%s'", relPath)
 		require.Equal(t, expectedManifest, gotManifest)
 	}
+}
+
+func TestDontRenderComponent(t *testing.T) {
+	gitDir, outDir := setupTest(t)
+
+	manifestPath := filepath.Join("manifests", "deployment.yaml")
+	repoFiles := map[string]string{
+		filepath.Join("manifests", "kustomization.yaml"): componentKustomization,
+		manifestPath: simpleDeployment,
+	}
+	buildGitRepo(t, gitDir, repoFiles)
+
+	require.NoError(t, kustomizeBuildDirs(outDir, false, []string{manifestPath}))
+	require.NoFileExists(t, outDir)
 }
 
 func TestWriteSingleManifest(t *testing.T) {

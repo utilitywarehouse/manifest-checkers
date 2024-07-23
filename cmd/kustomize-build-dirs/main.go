@@ -3,6 +3,8 @@ package main
 import (
 	"errors"
 	"fmt"
+	"io"
+	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -11,9 +13,16 @@ import (
 
 	"github.com/urfave/cli/v2"
 	"golang.org/x/sync/errgroup"
+	"gopkg.in/yaml.v2"
 )
 
 const manifestFileName = "manifests.yaml"
+
+// Kustomization represents the structure of a Kustomization file
+type Kustomization struct {
+	APIVersion string `yaml:"apiVersion"`
+	Kind       string `yaml:"kind"`
+}
 
 // variable used for testing
 var getwdFunc = os.Getwd
@@ -66,6 +75,11 @@ func kustomizeBuildDirs(outDir string, doTruncateSecrets bool, filepaths []strin
 		return err
 	}
 
+	kustomizationRoots, err = removeComponentKustomizations(rootDir, kustomizationRoots)
+	if err != nil {
+		return err
+	}
+
 	// truncate secrets so we can run `kustomize build` without having to decrypt them
 	if doTruncateSecrets {
 		if err := truncateSecrets(rootDir, kustomizationRoots); err != nil {
@@ -111,6 +125,7 @@ func findKustomizationRoots(root string, paths []string) ([]string, error) {
 		if kustomizationRoot == "" {
 			continue
 		}
+
 		if _, exists := rootsMap[kustomizationRoot]; !exists {
 			fmt.Printf("Found kustomization build dir: %s\n", kustomizationRoot)
 			rootsMap[kustomizationRoot] = struct{}{}
@@ -131,14 +146,54 @@ func findKustomizationRoot(repoRoot string, relativePath string) (string, error)
 		case err == nil:
 			// found 'kustomization.yaml'
 			return dir, nil
-		case err != nil && !os.IsNotExist(err):
-			return "", fmt.Errorf("Error checking for file in %s: %v", dir, err)
+		case !os.IsNotExist(err):
+			return "", fmt.Errorf("error checking for file in %s: %v", dir, err)
 		default:
 			// file not found, continue up the directory tree
 			continue
 		}
 	}
 	return "", nil
+}
+
+// removeComponentKustomizations checks the list of the kustomization files, and removes those with
+// kind: Component.
+// We can't expect standalone Component kustomization files to correctly render.
+func removeComponentKustomizations(kustomizationRoot string, paths []string) ([]string, error) {
+	pathsNoComponent := []string{}
+	for _, path := range paths {
+		isComponent, err := checkIfIsComponent(filepath.Join(kustomizationRoot, path, "kustomization.yaml"))
+		if err != nil {
+			return nil, err
+		}
+		if !isComponent {
+			pathsNoComponent = append(pathsNoComponent, path)
+		}
+	}
+	return pathsNoComponent, nil
+}
+
+func checkIfIsComponent(filepath string) (bool, error) {
+	file, err := os.Open(filepath)
+	if err != nil {
+		return false, fmt.Errorf("failed opening kustomization file: %s: %v", filepath, err)
+	}
+	defer file.Close()
+
+	// Read the file's content
+	data, err := io.ReadAll(file)
+	if err != nil {
+		log.Fatalf("Error reading file: %v", err)
+	}
+
+	// Unmarshal the YAML into the struct
+	var kustomization Kustomization
+	err = yaml.Unmarshal(data, &kustomization)
+	if err != nil {
+		log.Fatalf("Error unmarshaling YAML: %v", err)
+	}
+	return kustomization.Kind == "Component", nil
+
 }
 
 func truncateSecrets(rootDir string, dirs []string) error {
