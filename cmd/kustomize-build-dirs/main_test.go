@@ -51,7 +51,12 @@ func requireErorrPrefix(t *testing.T, err error, prefix string) {
 	t.Helper()
 
 	require.Error(t, err)
-	require.LessOrEqual(t, len(prefix), len(err.Error()), fmt.Sprintf("error cannot be shorter than prefix, err: %s, prefix: %s", err, prefix))
+	require.LessOrEqual(
+		t,
+		len(prefix),
+		len(err.Error()),
+		fmt.Sprintf("error cannot be shorter than prefix, err: %s, prefix: %s", err, prefix),
+	)
 	require.Equalf(t, prefix, err.Error()[:len(prefix)], "full error: %v", err)
 }
 

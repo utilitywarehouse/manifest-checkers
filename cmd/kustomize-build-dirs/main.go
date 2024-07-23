@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -162,7 +161,9 @@ func findKustomizationRoot(repoRoot string, relativePath string) (string, error)
 func removeComponentKustomizations(kustomizationRoot string, paths []string) ([]string, error) {
 	pathsNoComponent := []string{}
 	for _, path := range paths {
-		isComponent, err := checkIfIsComponent(filepath.Join(kustomizationRoot, path, "kustomization.yaml"))
+		isComponent, err := checkIfIsComponent(
+			filepath.Join(kustomizationRoot, path, "kustomization.yaml"),
+		)
 		if err != nil { //go-cov:skip
 			return nil, err
 		}
@@ -183,17 +184,16 @@ func checkIfIsComponent(filepath string) (bool, error) {
 	// Read the file's content
 	data, err := io.ReadAll(file)
 	if err != nil {
-		log.Fatalf("Error reading file: %v", err)
+		return false, fmt.Errorf("error reading file: %v", err)
 	}
 
 	// Unmarshal the YAML into the struct
 	var kustomization Kustomization
 	err = yaml.Unmarshal(data, &kustomization)
 	if err != nil { //go-cov:skip
-		log.Fatalf("Error unmarshaling YAML: %v", err)
+		return false, fmt.Errorf("error unmarshaling YAML: %v", err)
 	}
 	return kustomization.Kind == "Component", nil
-
 }
 
 func truncateSecrets(rootDir string, dirs []string) error {
