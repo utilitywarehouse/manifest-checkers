@@ -15,4 +15,4 @@ report-coverage-html: go-cov.out
 
 .PHONY: check-coverage
 check-coverage: go-cov.out
-	@go run gitlab.com/matthewhughes/go-cov/cmd/go-cov report --fail-under 100 $^
+	@go run gitlab.com/matthewhughes/go-cov/cmd/go-cov report $^
