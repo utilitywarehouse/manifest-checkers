@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"io/fs"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -141,16 +142,14 @@ func findKustomizationRoots(root string, paths []string) ([]string, error) {
 func findKustomizationRoot(repoRoot string, relativePath string) (string, error) {
 	for dir := filepath.Dir(relativePath); dir != ".."; dir = filepath.Clean(filepath.Join(dir, "..")) {
 		_, err := os.Stat(filepath.Join(repoRoot, dir, "kustomization.yaml"))
-		switch {
-		case err == nil:
-			// found 'kustomization.yaml'
-			return dir, nil
-		case !os.IsNotExist(err):
+		if err != nil {
+			if errors.Is(err, fs.ErrNotExist) {
+				// file not found, continue up the directory tree
+				continue
+			}
 			return "", fmt.Errorf("error checking for file in %s: %v", dir, err)
-		default:
-			// file not found, continue up the directory tree
-			continue
 		}
+		return dir, nil
 	}
 	return "", nil
 }
