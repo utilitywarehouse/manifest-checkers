@@ -32,6 +32,15 @@ builds:
       - linux
       - windows
       - darwin
+  - id: get-kustomize-build-base
+    main: ./cmd/get-kustomize-build-base
+    binary: get-kustomize-build-base
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - windows
+      - darwin
 
 archives:
   - format: tar.gz
