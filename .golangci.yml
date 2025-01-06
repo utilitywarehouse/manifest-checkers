@@ -40,7 +40,7 @@ linters:
     - misspell # Finds commonly misspelled English words in comments [fast: true]
     - nakedret # Finds naked returns in functions greater than a specified function length [fast: true]
     - errcheck # Errcheck is a program for checking for unchecked errors in go programs. These unchecked errors can be critical bugs in some cases [fast: false]
-    - gas # Inspects source code for security problems [fast: false]
+    - gosec # Inspects source code for security problems [fast: false]
     - unconvert # Remove unnecessary type conversions [fast: false]
     - unparam # Reports unused function parameters [fast: false]
     - prealloc # Finds slice declarations that could potentially be preallocated [fast: true]
