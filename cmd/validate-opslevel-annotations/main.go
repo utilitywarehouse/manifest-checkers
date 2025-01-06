@@ -183,7 +183,7 @@ func decodeManifest(rc io.ReadCloser) ([]client.Object, error) {
 		}
 
 		if isSupportedObject(object) {
-			objects = append(objects, object.(client.Object))
+			objects = append(objects, object.(client.Object)) //nolint:errcheck
 		}
 	}
 }
