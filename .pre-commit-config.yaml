@@ -4,8 +4,8 @@ repos:
     hooks:
       - id: golangci-lint-full
       - id: golangci-lint-config-verify
-  - repo: https://github.com/matthewhughes934/golines
-    rev: v0.12.0
+  - repo: https://github.com/segmentio/golines
+    rev: fc305205784a70b4cfc17397654f4c94e3153ce4
     hooks:
       - id: golines
   - repo: https://gitlab.com/matthewhughes/go-pre-commit
