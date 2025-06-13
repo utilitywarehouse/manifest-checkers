@@ -16,6 +16,7 @@ import (
 const (
 	// placeholder for tests that don't need to write anywhere
 	mockoutDir          = "/some/dir"
+	mockdirDepth        = 0
 	simpleKustomization = `apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
@@ -24,7 +25,7 @@ resources:
 `
 
 	componentKustomization = `apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Component 
+kind: Component
 
 patches:
   - path: deployment.yaml
@@ -99,7 +100,7 @@ func TestFailsWhenUnableToReadWorkingDirectory(t *testing.T) {
 	defer func() { getwdFunc = orig }()
 	getwdFunc = getwd
 
-	err := kustomizeBuildDirs(mockoutDir, false, []string{})
+	err := kustomizeBuildDirs(mockoutDir, mockdirDepth, false, []string{})
 
 	require.EqualError(t, err, expectedError)
 }
@@ -107,7 +108,7 @@ func TestFailsWhenUnableToReadWorkingDirectory(t *testing.T) {
 func TestFailsWhenUnableToFindKustomize(t *testing.T) {
 	expectedError := "requires `kustomize` to be installed https://kubectl.docs.kubernetes.io/installation/kustomize/"
 	t.Setenv("PATH", "")
-	err := kustomizeBuildDirs(mockoutDir, false, []string{})
+	err := kustomizeBuildDirs(mockoutDir, mockdirDepth, false, []string{})
 
 	require.EqualError(t, err, expectedError)
 }
@@ -124,7 +125,7 @@ func TestFailsWhenUnableToListSecrets(t *testing.T) {
 	)
 
 	// run command outside any Git directory
-	err = kustomizeBuildDirs(mockoutDir, true, []string{"kustomization.yaml"})
+	err = kustomizeBuildDirs(mockoutDir, mockdirDepth, true, []string{"kustomization.yaml"})
 	requireErorrPrefix(t, err, expectedErrPrefix)
 }
 
@@ -143,7 +144,7 @@ func TestFailsWhenUnableToTruncateSecret(t *testing.T) {
 	// make secret file read-only
 	require.NoError(t, os.Chmod(filepath.Join(gitDir, secretFile), 0o400))
 
-	err := kustomizeBuildDirs(mockoutDir, true, []string{"kustomization.yaml"})
+	err := kustomizeBuildDirs(mockoutDir, mockdirDepth, true, []string{"kustomization.yaml"})
 
 	requireErorrPrefix(t, err, expectedErrPrefix)
 }
@@ -162,7 +163,12 @@ func TestFailsWhenUnableToFindKustomizations(t *testing.T) {
 	defer os.Chmod(unredableDirPath, 0o700) //nolint:errcheck
 	expectedErrPrefix := "error checking for file in manifests:"
 
-	err := kustomizeBuildDirs(mockoutDir, false, []string{"manifests/kustomization.yaml"})
+	err := kustomizeBuildDirs(
+		mockoutDir,
+		mockdirDepth,
+		false,
+		[]string{"manifests/kustomization.yaml"},
+	)
 	requireErorrPrefix(t, err, expectedErrPrefix)
 }
 
@@ -181,7 +187,7 @@ func TestFailsOnKustomizeBuildFailure(t *testing.T) {
 		filepath.Join(gitDir, kustomizeDir),
 	)
 
-	err := kustomizeBuildDirs(mockoutDir, false, []string{kustomizationPath})
+	err := kustomizeBuildDirs(mockoutDir, mockdirDepth, false, []string{kustomizationPath})
 
 	requireErorrPrefix(t, err, expectedErrPrefix)
 }
@@ -203,7 +209,7 @@ func TestFailsWhenUnableToCreateTargetDir(t *testing.T) {
 	}
 	buildGitRepo(t, gitDir, repoFiles)
 
-	err := kustomizeBuildDirs(unwritableDir, false, []string{deploymentPath})
+	err := kustomizeBuildDirs(unwritableDir, mockdirDepth, false, []string{deploymentPath})
 	requireErorrPrefix(t, err, expectedErrPrefix)
 }
 
@@ -234,7 +240,7 @@ func TestFailsWhenFailingToWriteManifest(t *testing.T) {
 	}
 	buildGitRepo(t, gitDir, repoFiles)
 
-	err := kustomizeBuildDirs(outDir, false, []string{deploymentPath})
+	err := kustomizeBuildDirs(outDir, mockdirDepth, false, []string{deploymentPath})
 	requireErorrPrefix(t, err, expectedErrPrefix)
 }
 
@@ -248,7 +254,7 @@ func TestDoesNothingWhenNothingToBuild(t *testing.T) {
 	}
 	buildGitRepo(t, gitDir, repoFiles)
 
-	require.NoError(t, kustomizeBuildDirs(outDir, true, []string{"README.md"}))
+	require.NoError(t, kustomizeBuildDirs(outDir, mockdirDepth, true, []string{"README.md"}))
 
 	require.NoFileExists(t, outDir)
 	// sanity check no unexpected truncates
@@ -279,7 +285,10 @@ secretGenerator:
 	}
 
 	buildGitRepo(t, gitDir, repoFiles)
-	require.NoError(t, kustomizeBuildDirs(outDir, true, []string{"kustomization.yaml"}))
+	require.NoError(
+		t,
+		kustomizeBuildDirs(outDir, mockdirDepth, true, []string{"kustomization.yaml"}),
+	)
 }
 
 func readOutDir(t *testing.T, outDir string) map[string]string {
@@ -327,7 +336,7 @@ func TestDontRenderComponent(t *testing.T) {
 	}
 	buildGitRepo(t, gitDir, repoFiles)
 
-	require.NoError(t, kustomizeBuildDirs(outDir, false, []string{manifestPath}))
+	require.NoError(t, kustomizeBuildDirs(outDir, mockdirDepth, false, []string{manifestPath}))
 	require.NoFileExists(t, outDir)
 }
 
@@ -344,7 +353,7 @@ func TestWriteSingleManifest(t *testing.T) {
 		"manifests": simpleDeployment,
 	}
 
-	require.NoError(t, kustomizeBuildDirs(outDir, false, []string{manifestPath}))
+	require.NoError(t, kustomizeBuildDirs(outDir, mockdirDepth, false, []string{manifestPath}))
 	compareResults(t, outDir, expectedContents, readOutDir(t, outDir))
 }
 
@@ -363,7 +372,7 @@ func TestWritesManifestWhenGivenNonManifestFile(t *testing.T) {
 		"manifests": simpleDeployment,
 	}
 
-	require.NoError(t, kustomizeBuildDirs(outDir, false, []string{nonManifestPath}))
+	require.NoError(t, kustomizeBuildDirs(outDir, mockdirDepth, false, []string{nonManifestPath}))
 	compareResults(t, outDir, expectedContents, readOutDir(t, outDir))
 }
 
@@ -388,7 +397,12 @@ func TestWriteMultipleManifests(t *testing.T) {
 
 	require.NoError(
 		t,
-		kustomizeBuildDirs(outDir, false, []string{firstDeploymentPath, secondDeploymentPath}),
+		kustomizeBuildDirs(
+			outDir,
+			mockdirDepth,
+			false,
+			[]string{firstDeploymentPath, secondDeploymentPath},
+		),
 	)
 	compareResults(t, outDir, expectedContents, readOutDir(t, outDir))
 }
@@ -413,7 +427,12 @@ func TestWriteMultipleManifestsOneIscomponent(t *testing.T) {
 
 	require.NoError(
 		t,
-		kustomizeBuildDirs(outDir, false, []string{firstDeploymentPath, secondDeploymentPath}),
+		kustomizeBuildDirs(
+			outDir,
+			mockdirDepth,
+			false,
+			[]string{firstDeploymentPath, secondDeploymentPath},
+		),
 	)
 	compareResults(t, outDir, expectedContents, readOutDir(t, outDir))
 }
@@ -450,9 +469,185 @@ resources:
 		t,
 		kustomizeBuildDirs(
 			outDir,
+			mockdirDepth,
 			true,
 			[]string{filepath.Join(manifestsDir, "kustomization.yaml")},
 		),
 	)
 	compareResults(t, outDir, expectedContents, readOutDir(t, outDir))
+}
+
+func TestSplitPath(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected []string
+	}{
+		{"file.yaml", []string{}},
+		{"aaa/bbb/file.yaml", []string{"aaa", "bbb"}},
+		{"aaa/bbb/ccc/file.yaml", []string{"aaa", "bbb", "ccc"}},
+		{"./aaa/bbb/ccc/file.yaml", []string{"aaa", "bbb", "ccc"}},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.input, func(t *testing.T) {
+			got := splitPath(tt.input)
+			require.Equal(t, tt.expected, got)
+		})
+	}
+}
+
+func TestCommonPrefix(t *testing.T) {
+	tests := []struct {
+		a, b     []string
+		expected []string
+	}{
+		{[]string{}, []string{"aaa"}, []string{}},
+		{[]string{"aaa"}, []string{}, []string{}},
+		{[]string{"aaa", "bbb"}, []string{"aaa", "bbb"}, []string{"aaa", "bbb"}},
+		{[]string{"aaa", "bbb"}, []string{"ccc", "ddd"}, []string{}},
+		{[]string{"aaa", "bbb", "ccc"}, []string{"aaa", "bbb", "ddd"}, []string{"aaa", "bbb"}},
+	}
+
+	for _, tt := range tests {
+		t.Run("", func(t *testing.T) {
+			got := commonPrefix(tt.a, tt.b)
+			require.Equal(t, tt.expected, got)
+		})
+	}
+}
+
+func TestDeepestCommonDirs(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    []string
+		minDepth int
+		expected []string
+	}{
+		{
+			name:     "empty input",
+			input:    []string{},
+			minDepth: 0,
+			expected: nil,
+		},
+		{
+			name:     "single path, depth 0",
+			input:    []string{"aaa/bbb/ccc/file.yaml"},
+			minDepth: 0,
+			expected: []string{"aaa/bbb/ccc/"},
+		},
+		{
+			name: "multiple grouped paths",
+			input: []string{
+				"file.yaml",
+				"aaa/bbb/ccc/file.yaml",
+				"aaa/bbb/ccc/bbb/file.yaml",
+				"aaa/bbb/ccc/ddd/file1.yaml",
+				"aaa/bbb/ccc/ddd/file2.yaml",
+				"aaa/bbb/ccc/ddd/eee/file.yaml",
+				"bbb/ccc/file.yaml",
+				"bbb/ccc/ddd/file.yaml",
+				"ccc/ddd/eee/fff/ggg/hhh/file.yaml",
+			},
+			minDepth: 1,
+			expected: []string{
+				"aaa/bbb/ccc/",
+				"bbb/ccc/",
+				"ccc/ddd/eee/fff/ggg/hhh/",
+			},
+		},
+		{
+			name: "no shared prefixes",
+			input: []string{
+				"aaa/file.yaml",
+				"bbb/file.yaml",
+				"ccc/file.yaml",
+			},
+			minDepth: 1,
+			expected: []string{
+				"aaa/",
+				"bbb/",
+				"ccc/",
+			},
+		},
+		{
+			name: "nested and flat mix",
+			input: []string{
+				"aaa/bbb/ccc/file.yaml",
+				"aaa/bbb/file.yaml",
+				"bbb/ccc/file.yaml",
+			},
+			minDepth: 1,
+			expected: []string{
+				"aaa/bbb/",
+				"bbb/ccc/",
+			},
+		},
+		{
+			name:     "single file in root dir",
+			input:    []string{"file.yaml"},
+			minDepth: 0,
+			expected: []string{""},
+		},
+		{
+			name: "multiple files, depth 0",
+			input: []string{
+				"file.yaml",
+				"aaa/bbb/file.yaml",
+				"ccc/file.yaml",
+			},
+			minDepth: 0,
+			expected: []string{
+				"",
+				"aaa/bbb/",
+				"ccc/",
+			},
+		},
+		{
+			name: "multiple files, depth 1",
+			input: []string{
+				"file.yaml",
+				"aaa/bbb/file.yaml",
+				"ccc/file.yaml",
+			},
+			minDepth: 1,
+			expected: []string{
+				"aaa/bbb/",
+				"ccc/",
+			},
+		},
+		{
+			name: "multiple files, depth 2",
+			input: []string{
+				"file.yaml",
+				"aaa/file.yaml",
+				"aaa/bbb/file.yaml",
+				"bbb/ccc/file.yaml",
+			},
+			minDepth: 2,
+			expected: []string{
+				"aaa/bbb/",
+				"bbb/ccc/",
+			},
+		},
+		{
+			name: "multiple files, depth 2",
+			input: []string{
+				"file.yaml",
+				"aaa/bbb/file.yaml",
+				"aaa/bbb/ccc/file.yaml",
+				"aaa/bbb/ccc/ddd/file.yaml",
+			},
+			minDepth: 3,
+			expected: []string{
+				"aaa/bbb/ccc/",
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := deepestCommonDirs(tt.input, tt.minDepth)
+			require.Equal(t, tt.expected, got)
+		})
+	}
 }

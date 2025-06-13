@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"sort"
 	"strings"
 	"sync"
 
@@ -29,6 +30,7 @@ var getwdFunc = os.Getwd
 func main() { //go-cov:skip
 	var opts struct {
 		outDir            string
+		dirDepth          int
 		doTruncateSecrets bool
 	}
 	app := &cli.App{
@@ -41,6 +43,12 @@ func main() { //go-cov:skip
 				Usage:       "Directory to output build manifests",
 				Destination: &opts.outDir,
 			},
+			&cli.IntFlag{
+				Name:        "depth",
+				Value:       0,
+				Usage:       "Minimum directory depth to work with (e.g., 2 means paths will be at least two levels deep like 'aaa/bbb/')",
+				Destination: &opts.dirDepth,
+			},
 			&cli.BoolFlag{
 				Name:        "truncate-secrets",
 				Value:       false,
@@ -49,7 +57,12 @@ func main() { //go-cov:skip
 			},
 		},
 		Action: func(c *cli.Context) error {
-			return kustomizeBuildDirs(opts.outDir, opts.doTruncateSecrets, c.Args().Slice())
+			return kustomizeBuildDirs(
+				opts.outDir,
+				opts.dirDepth,
+				opts.doTruncateSecrets,
+				c.Args().Slice(),
+			)
 		},
 	}
 
@@ -59,7 +72,12 @@ func main() { //go-cov:skip
 	}
 }
 
-func kustomizeBuildDirs(outDir string, doTruncateSecrets bool, filepaths []string) error {
+func kustomizeBuildDirs(
+	outDir string,
+	dirDepth int,
+	doTruncateSecrets bool,
+	filepaths []string,
+) error {
 	rootDir, err := getwdFunc()
 	if err != nil {
 		return fmt.Errorf("error reading working directory: %v", err)
@@ -69,7 +87,7 @@ func kustomizeBuildDirs(outDir string, doTruncateSecrets bool, filepaths []strin
 		return err
 	}
 
-	kustomizationRoots, err := findKustomizationRoots(rootDir, filepaths)
+	kustomizationRoots, err := findKustomizationRoots(rootDir, filepaths, dirDepth)
 	if err != nil {
 		return err
 	}
@@ -109,10 +127,103 @@ func checkKustomizeInstalled() error {
 	return nil
 }
 
+// splitPath takes a full file path string and returns a slice of its directory components.
+// It extracts the directory portion of the path and splits it by forward slashes (/).
+// Example: "aaa/bbb/ccc/file.yaml" => ["aaa", "bbb", "ccc"]
+func splitPath(path string) []string {
+	cleaned := filepath.ToSlash(filepath.Dir(path))
+	if cleaned == "." {
+		return []string{}
+	}
+	return strings.Split(cleaned, "/")
+}
+
+// commonPrefix compares two string slices (representing directory segments)
+// and returns their longest shared prefix.
+// Example: ["aaa", "bbb", "ccc"], ["aaa", "bbb", "ddd"] => ["aaa", "bbb"]
+func commonPrefix(a, b []string) []string {
+	minLen := len(a)
+	if len(b) < minLen {
+		minLen = len(b)
+	}
+	out := make([]string, 0, minLen)
+	for i := 0; i < minLen; i++ {
+		if a[i] != b[i] {
+			break
+		}
+		out = append(out, a[i])
+	}
+	return out
+}
+
+// deepestCommonDirs takes a list of file paths and returns a list of directory paths
+// that represent the deepest common directory for each group of similarly prefixed files
+// with a minimum directory depth enforced.
+// Example (with minDepth = 2):
+// Input: ["aaa/file.yaml", "aaa/bbb/file.yaml", "bbb/ccc/file1.yaml", "bbb/ccc/file2.yaml"]
+// Output: ["aaa/bbb/", "bbb/ccc/"]
+func deepestCommonDirs(paths []string, minDepth int) []string {
+	if len(paths) == 0 {
+		return nil
+	}
+
+	dirSet := make(map[string]struct{})
+
+	for _, path := range paths {
+		dir := filepath.ToSlash(filepath.Dir(path))
+		if dir == "." {
+			// File in root directory is represented as empty string
+			dir = ""
+		}
+		dirSet[dir] = struct{}{}
+	}
+
+	// Filter out directories that are shallower than minDepth
+	var dirs []string
+	for dir := range dirSet {
+		segments := strings.Split(dir, "/")
+		if dir == "" {
+			segments = []string{}
+		}
+		if len(segments) >= minDepth {
+			dirs = append(dirs, dir)
+		}
+	}
+	sort.Strings(dirs) // Sort for consistent and hierarchical comparison
+
+	var result []string
+	skipPrefixes := make(map[string]struct{})
+
+	for _, dir := range dirs {
+		skip := false
+
+		for parent := range skipPrefixes {
+			if strings.HasPrefix(dir+"/", parent+"/") {
+				skip = true
+				break
+			}
+		}
+
+		if !skip {
+			skipPrefixes[dir] = struct{}{}
+			if dir == "" {
+				result = append(result, "")
+			} else {
+				result = append(result, dir+"/")
+			}
+		}
+	}
+
+	return result
+}
+
 // findKustomizationRoots finds, for each given path, the first parent
 // directory containing a 'kustomization.yaml'. It returns a list of such paths
 // relative to the root
-func findKustomizationRoots(root string, paths []string) ([]string, error) {
+func findKustomizationRoots(root string, paths []string, dirDepth int) ([]string, error) {
+	// Group paths by shared prefixes and return their deepest common directories
+	paths = deepestCommonDirs(paths, dirDepth)
+
 	// there may be multiple changes under the same path
 	// so use a map to track unique ones
 	rootsMap := map[string]struct{}{}
