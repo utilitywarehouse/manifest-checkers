@@ -21,15 +21,16 @@ Usage:
 
     NAME:
        kustomize-build-dirs - Given a list of input files, run `kustomize build` somewhere
-    
+
     USAGE:
-       kustomize-build-dirs [global options] command [command options] 
-    
+       kustomize-build-dirs [global options] command [command options]
+
     COMMANDS:
        help, h  Shows a list of commands or help for one command
-    
+
     GLOBAL OPTIONS:
        --out-dir value     Directory to output build manifests
+       --depth value       Minimum directory depth to work with (e.g., 2 means paths will be at least two levels deep like 'aaa/bbb/') (default: 0)
        --truncate-secrets  Whether or not to truncate secrets. This can make life easier when you don't have strongbox credentials for some secrets (default: false)
        --help, -h          show help
 
@@ -46,6 +47,45 @@ in 'manifests.yaml' there. For example, if there is a kustomize directory at
 
 Will result in the built manifests being placed at
 'build/project-manifests/manifests.yaml'
+
+Passing the `--depth` flag will set a minimum directory depth for kustomize
+directories to be processed. If a directory’s depth is less than the specified
+depth value, it will be ignored and no manifests will be built for it.
+
+For example, you made changes to the following files:
+
+```
+cluster-a/
+└── file.yaml
+cluster-b/
+├── namespace-a/
+|   ├── file.yaml
+|   └── app-a/
+|       └── file.yaml
+└── namespace-b/
+    └── file.yaml
+cluster-c/
+└── namespace-a/
+    └── app-a/
+        └── file.yaml
+```
+
+and run
+
+```
+kustomize-build-dirs --out-dir build --depth 2 project-manifests
+```
+
+the result manifests built will only include
+
+```
+build/
+├── cluster-b/
+|   ├── namespace-a/
+|   └── namespace-b/
+└── cluster-c/
+    └── namesapce-a/
+```
 
 Passing the `--truncate-secrets` flag will cause the application to empty any
 files that look to be [`strongbox`](https://github.com/uw-labs/strongbox)
