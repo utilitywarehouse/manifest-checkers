@@ -477,45 +477,6 @@ resources:
 	compareResults(t, outDir, expectedContents, readOutDir(t, outDir))
 }
 
-func TestSplitPath(t *testing.T) {
-	tests := []struct {
-		input    string
-		expected []string
-	}{
-		{"file.yaml", []string{}},
-		{"aaa/bbb/file.yaml", []string{"aaa", "bbb"}},
-		{"aaa/bbb/ccc/file.yaml", []string{"aaa", "bbb", "ccc"}},
-		{"./aaa/bbb/ccc/file.yaml", []string{"aaa", "bbb", "ccc"}},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.input, func(t *testing.T) {
-			got := splitPath(tt.input)
-			require.Equal(t, tt.expected, got)
-		})
-	}
-}
-
-func TestCommonPrefix(t *testing.T) {
-	tests := []struct {
-		a, b     []string
-		expected []string
-	}{
-		{[]string{}, []string{"aaa"}, []string{}},
-		{[]string{"aaa"}, []string{}, []string{}},
-		{[]string{"aaa", "bbb"}, []string{"aaa", "bbb"}, []string{"aaa", "bbb"}},
-		{[]string{"aaa", "bbb"}, []string{"ccc", "ddd"}, []string{}},
-		{[]string{"aaa", "bbb", "ccc"}, []string{"aaa", "bbb", "ddd"}, []string{"aaa", "bbb"}},
-	}
-
-	for _, tt := range tests {
-		t.Run("", func(t *testing.T) {
-			got := commonPrefix(tt.a, tt.b)
-			require.Equal(t, tt.expected, got)
-		})
-	}
-}
-
 func TestDeepestCommonDirs(t *testing.T) {
 	tests := []struct {
 		name     string

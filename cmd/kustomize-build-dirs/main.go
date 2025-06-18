@@ -127,35 +127,6 @@ func checkKustomizeInstalled() error {
 	return nil
 }
 
-// splitPath takes a full file path string and returns a slice of its directory components.
-// It extracts the directory portion of the path and splits it by forward slashes (/).
-// Example: "aaa/bbb/ccc/file.yaml" => ["aaa", "bbb", "ccc"]
-func splitPath(path string) []string {
-	cleaned := filepath.ToSlash(filepath.Dir(path))
-	if cleaned == "." {
-		return []string{}
-	}
-	return strings.Split(cleaned, "/")
-}
-
-// commonPrefix compares two string slices (representing directory segments)
-// and returns their longest shared prefix.
-// Example: ["aaa", "bbb", "ccc"], ["aaa", "bbb", "ddd"] => ["aaa", "bbb"]
-func commonPrefix(a, b []string) []string {
-	minLen := len(a)
-	if len(b) < minLen {
-		minLen = len(b)
-	}
-	out := make([]string, 0, minLen)
-	for i := 0; i < minLen; i++ {
-		if a[i] != b[i] {
-			break
-		}
-		out = append(out, a[i])
-	}
-	return out
-}
-
 // deepestCommonDirs takes a list of file paths and returns a list of directory paths
 // that represent the deepest common directory for each group of similarly prefixed files
 // with a minimum directory depth enforced.
