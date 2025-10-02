@@ -27,7 +27,7 @@ type Kustomization struct {
 // variable used for testing
 var getwdFunc = os.Getwd
 
-func main() { //go-cov:skip
+func main() {
 	var opts struct {
 		outDir            string
 		dirDepth          int

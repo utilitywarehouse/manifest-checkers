@@ -4,7 +4,6 @@ on:
     tags:
       - 'v*'
 
-
 permissions:
   # Permission for GITHUB_TOKEN to be able to create release
   contents: write
