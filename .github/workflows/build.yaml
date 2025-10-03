@@ -25,4 +25,4 @@ jobs:
         with:
           distribution: goreleaser
           version: latest
-          args: build --clean --single-target --snapshot
+          args: build --clean --single-target --snapshot --skip before
