@@ -15,7 +15,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func main() { //go-cov:skip
+func main() {
 	if err := validateOpsLevelAnnotationsForManifests(os.Args[1:]); err != nil {
 		fmt.Fprintf(os.Stderr, "failed: %v\n", err)
 		os.Exit(1)
@@ -183,7 +183,7 @@ func decodeManifest(rc io.ReadCloser) ([]client.Object, error) {
 		}
 
 		if isSupportedObject(object) {
-			objects = append(objects, object.(client.Object)) //nolint:errcheck
+			objects = append(objects, object.(client.Object))
 		}
 	}
 }
